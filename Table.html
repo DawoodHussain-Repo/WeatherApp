@@ -115,7 +115,9 @@
 
 <div id="tablearea" class="flex flex-col md:flex-row w-full mr-2">
     <div class="bg-gray-800 shadow-md rounded-lg md:p-6 p-1 opacity-80 mb-6 flex-grow mr-0 overflow-auto">
+     
         <table class="min-w-full bg-gray-800">
+         
             <thead>
                 <tr>
                     <th class="w-1/6 py-1 px-4 text-left md:text-lg font-semibold text-gray-300 border-b border-gray-700">Day</th>
@@ -125,16 +127,16 @@
                     <th class="w-1/6 py-1 px-4 text-left md:text-lg font-semibold text-gray-300 border-b border-gray-700">Condition</th>
                 </tr>
             </thead>
+
             <tbody id="tableBody">
                 <tr>
-                    <td class="py-2 px-4 border-b border-gray-700">Monday</td>
-                    <td class="py-2 px-4 border-b border-gray-700">2024-10-15</td>
-                    <td class="py-2 px-4 border-b border-gray-700">23.00 °C</td>
-                    <td class="py-2 px-4 border-b border-gray-700">18.00 °C</td>
-                    <td class="condition-cell py-2 px-4 border-b border-gray-700">Clear sky with a chance of rain</td>
+
+                    <div id="loading-spinner" class="spinner" style="display: none;"></div>
+
                 </tr>
                 <!-- More rows can be added here -->
             </tbody>
+         
         </table>
 
         <!-- Pagination Controls -->

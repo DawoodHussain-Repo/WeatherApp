@@ -13,6 +13,9 @@ let chatbotinputMob=document.querySelector('#chatbotInputMobile');
 let  chatbotResponseMob=document.getElementById('chatbotResponseMobile');
 
 const searchInput = document.querySelector('input[type="text"]');
+
+
+
 async function FetchGeminiResponse(chatinput) {
 
 

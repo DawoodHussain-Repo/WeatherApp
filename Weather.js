@@ -2,11 +2,38 @@ function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     sidebar.classList.toggle('active');
 }
-getWeatherData('Islamabad');
+// Function to show loading spinner
+// Function to show loading spinner and hide weather data
+function showSpinner() {
+    document.getElementById('loading-spinner').style.display = 'block';
+    
+    // Hide all weather data elements
+    document.getElementById('city-name').style.display = 'none';
+    document.getElementById('weather-icon').style.display = 'none';
+    document.getElementById('city-temp').style.display = 'none';
+    document.getElementById('humidity-value').style.display = 'none';
+    document.getElementById('wind-speed-value').style.display = 'none';
+    document.getElementById('pressure-value').style.display = 'none';
+}
+
+// Function to hide loading spinner and show weather data
+function hideSpinner() {
+    document.getElementById('loading-spinner').style.display = 'none';
+    
+    // Show all weather data elements
+    document.getElementById('city-name').style.display = 'block';
+    document.getElementById('weather-icon').style.display = 'block';
+    document.getElementById('city-temp').style.display = 'block';
+    document.getElementById('humidity-value').style.display = 'block';
+    document.getElementById('wind-speed-value').style.display = 'block';
+    document.getElementById('pressure-value').style.display = 'block';
+}
 
 function getWeatherData(city) {
+    showSpinner();  // Show spinner when the API call starts
     const apiKey = 'f46cf96a3a72845e83afefb220c37c9a';
     let url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+
     fetch(url)
         .then(response => {
             if (response.status === 404) {
@@ -23,9 +50,10 @@ function getWeatherData(city) {
             const humidity = data.main.humidity;
             const windSpeed = data.wind.speed;
             const pressure = data.main.pressure;
-const weatherCon=data.weather[0].main;
+            const weatherCon = data.weather[0].main;
+
             // Update the UI with the fetched weather details
-            updateWeather(cityName, temperature, weatherIcon, humidity, windSpeed, pressure,weatherCon);
+            updateWeather(cityName, temperature, weatherIcon, humidity, windSpeed, pressure, weatherCon);
 
             // Fetch forecast data for charts
             getForecastData(data.coord.lat, data.coord.lon);
@@ -37,9 +65,12 @@ const weatherCon=data.weather[0].main;
                 console.error('There was an error fetching the weather data:', error);
                 showError('Unable to fetch weather data. Please try again later.');
             }
+        })
+        .finally(() => {
+            hideSpinner();  // Hide spinner when the API call completes (whether success or failure)
         });
 }
-// Function to fetch forecast data
+
 function getForecastData(lat, lon) {
     const apiKey = 'f46cf96a3a72845e83afefb220c37c9a';
     let url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
@@ -63,7 +94,7 @@ function getForecastData(lat, lon) {
                     dailyData[day] = {
                         temperatures: [],
                         humidity: [],
-                        weatherCondition: item.weather[0].main,  // Extracting weather condition
+                        weatherCondition: item.weather[0].main,
                     };
                 }
                 dailyData[day].temperatures.push(item.main.temp);
@@ -75,7 +106,7 @@ function getForecastData(lat, lon) {
                 labels: Object.keys(dailyData),
                 temperatures: Object.values(dailyData).map(data => (data.temperatures.reduce((a, b) => a + b, 0) / data.temperatures.length).toFixed(1)),
                 humidity: Object.values(dailyData).map(data => (data.humidity.reduce((a, b) => a + b, 0) / data.humidity.length).toFixed(1)),
-                weatherConditions: Object.values(dailyData).map(data => data.weatherCondition), // Include weather conditions for doughnut chart
+                weatherConditions: Object.values(dailyData).map(data => data.weatherCondition),
             };
 
             // Update charts with new data
@@ -83,8 +114,12 @@ function getForecastData(lat, lon) {
         })
         .catch(error => {
             console.error('Error fetching forecast data:', error);
+        })
+        .finally(() => {
+            hideSpinner(); 
         });
 }
+
 // Function to get weather data based on the user's location
 function getWeatherByLocation() {
     if (navigator.geolocation) {
@@ -433,5 +468,4 @@ searchInput.addEventListener('keypress', SearchEvent);
 document.querySelector("#searchBtn").addEventListener('click', SearchByClick);
 
 
-  
-
+getWeatherData('Islamabad');
