@@ -41,26 +41,27 @@
 
      <!-- Content -->
      <div class="content-wrapper flex-grow md:p-6 p-2 transition-all duration-300 md:ml-64">
-      <!-- Header Section -->
-      <div id="HeaderArea" class="flex flex-grow md:flex-row flex-row items-center md:space-x-3 space-x-1 space-y-0 w-full mb-5">
-        <!-- Hamburger Menu Button (Visible on small screens) -->
-        <button id="HamMenu" class="toggle-btn md:hidden bg-gray-700 text-white rounded focus:outline-none hover:bg-gray-500" onclick="toggleSidebar()">
-            ☰
-        </button>
+  <!-- Header Section -->
+  <div id="HeaderArea" class="flex flex-grow md:flex-row flex-row items-center md:space-x-3 space-x-1 space-y-0 w-full mb-5">
+    <!-- Hamburger Menu Button (Visible on small screens) -->
+    <button id="HamMenu" class="toggle-btn md:hidden bg-gray-700 text-white rounded focus:outline-none hover:bg-gray-500" onclick="toggleSidebar()">
+        ☰
+    </button>
+
+    <!-- Search Input (60% width on mobile and auto-grow on larger screens) -->
+    <input type="text" placeholder="Search by City" class="w-3/5  md:flex-grow rounded-lg border-2 border-black focus:outline-none focus:border-cyan-500 bg-gray-800 text-white shadow-md placeholder-gray-500 transition-all duration-300" id="search-input">
+
+    <!-- Search Button (40% width on mobile and auto-grow on larger screens) -->
+    <button id="searchBtn" class="w-1/5 md:w-1/5 p-2 flex items-center justify-center hover:bg-yellow-500 rounded-lg text-center text-white font-semibold shadow-md transition duration-300 transform bg-gray-800 gradient hover:scale-105">
+        🔍<span id="searchText" class="hidden md:inline-block"> Search</span>
+    </button>
+
+    <!-- Chatbot Button (Visible on larger screens) -->
+    <button class="relative w-12 h-12 bg-opacity-70 bg-gray-800 rounded-full flex justify-center items-center transition-transform duration-300 transform hover:scale-110 cursor-pointer block" aria-label="Open Chatbot"> 
+        <img src="./Asset/chatbot.png" alt="Chatbot" class="w-full h-full object-cover rounded-full shadow-md transition-transform duration-300 hover:scale-105">
+    </button>
+</div>
     
-        <!-- Search Input (60% width on mobile and auto-grow on larger screens) -->
-        <input type="text" placeholder="Search by City" class="w-3/5  md:flex-grow rounded-lg border-2 border-black focus:outline-none focus:border-cyan-500 bg-gray-800 text-white shadow-md placeholder-gray-500 transition-all duration-300" id="search-input">
-    
-        <!-- Search Button (40% width on mobile and auto-grow on larger screens) -->
-        <button id="searchBtn" class="w-1/5 md:w-1/5 p-2 flex items-center justify-center hover:bg-yellow-500 rounded-lg text-center text-white font-semibold shadow-md transition duration-300 transform bg-gray-800 gradient hover:scale-105">
-            🔍<span id="searchText" class="hidden md:inline-block"> Search</span>
-        </button>
-    
-        <!-- Chatbot Button (Visible on larger screens) -->
-        <button class="relative w-12 h-12 bg-opacity-70 bg-gray-800 rounded-full flex justify-center items-center transition-transform duration-300 transform hover:scale-110 cursor-pointer block" aria-label="Open Chatbot"> 
-            <img src="./Asset/chatbot.png" alt="Chatbot" class="w-full h-full object-cover rounded-full shadow-md transition-transform duration-300 hover:scale-105">
-        </button>
-    </div>
 
                 <!-- Table Section and Chatbot Section -->
   <!-- Buttons Section -->
@@ -112,13 +113,13 @@
     
 </div>
 
-
-<div id="tablearea" class="flex flex-col md:flex-row w-full mr-2">
+<div id="loading-spinner" class="flex justify-center items-center" style="display: none; height: 200px;">
+    <div class="spinner"></div>
+</div>
+<div id="tablearea" class="flex flex-col md:flex-row max-w-full mr-0">
     <div class="bg-gray-800 shadow-md rounded-lg md:p-6 p-1 opacity-80 mb-6 flex-grow  overflow-auto">
-        <div id="loading-spinner" class="flex justify-center items-center" style="display: none; height: 200px;">
-            <div class="spinner"></div>
-        </div>
-        <table class="min-w-full bg-gray-800" id="mainTable">
+       
+        <table class=" bg-gray-800" id="mainTable">
             <thead>
                 <tr>
                     <th class="w-1/6 py-1 px-2 text-left md:text-lg font-semibold text-gray-300 border-b border-gray-700">Day</th>
@@ -148,7 +149,7 @@
     </div>
     
 
-    <div class="chatbot-section bg-gray-800 shadow-md p-6 rounded-md hidden md:flex w-full lg:w-1/3 md:ml-4 mb-6 flex flex-col ">
+    <div class="chatbot-section bg-gray-800 shadow-md p-6 rounded-md hidden md:flex w-1/3 lg:w-1/3 md:ml-4 mb-6 flex flex-col ">
         <h3 class="text-xl font-bold mb-4 text-white">Chatbot</h3>
         <div class="flex-grow bg-gray-700 p-4 rounded-md mb-4 overflow-auto h-64" id="chatbotResponse">
             <p class="bg-green-500 text-white rounded-2xl px-4 py-2 inline-block max-w-xs break-words shadow-md float-left clear-both">
