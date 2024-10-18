@@ -44,4 +44,4 @@ Follow these steps to set up the development environment:
    git clone https://github.com/yourusername/weather-dashboard.git
 
 
-Netlify Link (Live Link): https://6712a51fdc3fa08c2c000545--weatherwizards.netlify.app/ 
+Netlify Link (Live Link): https://weatherbots.netlify.app/
