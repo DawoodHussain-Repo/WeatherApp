@@ -144,6 +144,7 @@ function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     sidebar.classList.toggle('active');
 }
+
 function GetGeminiResponse(){
 const GeminiapiKey = 'AIzaSyDY9U0RmuLqudas1_efkVyXf3Ix-DWZK8A';
 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
@@ -340,41 +341,54 @@ function findMinTemperature(data) {
   }
 
   async function sendMessage() {
-let message;
-if(chatbotinputMob.value)
-    {
-        message=chatbotinputMob.value;
-
-    } else if(chatbotinput.value)
-    {
-
-        message=chatbotinput.value;
-
-    }else
-    {
+    let message;
+    if (chatbotinputMob.value) {
+        message = chatbotinputMob.value;
+    } else if (chatbotinput.value) {
+        message = chatbotinput.value;
+    } else {
         return;
     }
-    
+
     appendUserMessage(message);
     appendUserMessageMob(message);
-    message=message.toLowerCase();
+    message = message.toLowerCase();
+
     // Weather-related queries
     if (message.includes('max temp') || message.includes('maximum temperature') || message.includes('hottest')) {
         appendChatbotMessage(`The maximum temperature in ${currentCity} is ${findMaxTemperature(ForecastData)} °C.`);
-    appendChatbotMessageMob(`The maximum temperature in ${currentCity} is ${findMaxTemperature(ForecastData)} °C.`);
-    } 
+        appendChatbotMessageMob(`The maximum temperature in ${currentCity} is ${findMaxTemperature(ForecastData)} °C.`);
+    }
     else if (message.includes('min temp') || message.includes('minimum temperature') || message.includes('coldest')) {
         appendChatbotMessage(`The minimum temperature in ${currentCity} is ${findMinTemperature(ForecastData)} °C.`);
-    appendChatbotMessageMob(`The minimum temperature in ${currentCity} is ${findMinTemperature(ForecastData)} °C.`);
-    } 
+        appendChatbotMessageMob(`The minimum temperature in ${currentCity} is ${findMinTemperature(ForecastData)} °C.`);
+    }
     else if (message.includes('avg temp') || message.includes('average temperature') || message.includes('mean temp')) {
         appendChatbotMessage(`The average temperature in ${currentCity} is ${calculateAverageTemperature(ForecastData)} °C.`);
-    appendChatbotMessageMob(`The average temperature in ${currentCity} is ${calculateAverageTemperature(ForecastData)} °C.`);
-    } 
-    else if (message.includes('current condition') || message.includes('condition' ||message.includes('today'))){
+        appendChatbotMessageMob(`The average temperature in ${currentCity} is ${calculateAverageTemperature(ForecastData)} °C.`);
+    }
+    else if (message.includes('current condition') || message.includes('condition') || message.includes('today')) {
         appendChatbotMessage(`The current weather in ${currentCity} condition is: ${findFirstWeatherCondition(ForecastData)}.`);
-    appendChatbotMessageMob(`The current weather in ${currentCity} condition is: ${findFirstWeatherCondition(ForecastData)}.`);
-    } 
+        appendChatbotMessageMob(`The current weather in ${currentCity} condition is: ${findFirstWeatherCondition(ForecastData)}.`);
+    }
+    // Handle day-specific weather queries
+    else if (message.includes('weather on') || message.includes('weather like')) {
+        const dayOfWeek = extractDayFromMessage(message); // Extract the day from the message
+        if (dayOfWeek) {
+            const forecast = findWeatherForDay(ForecastData, dayOfWeek); // Find the forecast for that day
+            if (forecast) {
+                appendChatbotMessage(`The weather on ${dayOfWeek} in ${currentCity} is: ${forecast.condition} with a temperature of ${forecast.temperature} °C.`);
+                appendChatbotMessageMob(`The weather on ${dayOfWeek} in ${currentCity} is: ${forecast.condition} with a temperature of ${forecast.temperature} °C.`);
+            } else {
+                appendChatbotMessage(`Sorry, I couldn't find the weather forecast for ${dayOfWeek}.`);
+                appendChatbotMessageMob(`Sorry, I couldn't find the weather forecast for ${dayOfWeek}.`);
+            }
+        } else {
+            appendChatbotMessage("Please specify a valid day of the week.");
+            appendChatbotMessageMob("Please specify a valid day of the week.");
+        }
+    }
+    // Fallback to fetching a response from Gemini if no match
     else {
         FetchGeminiResponse(message).then((resp) => {
             appendChatbotMessage(resp);
@@ -383,10 +397,35 @@ if(chatbotinputMob.value)
             console.error("Error fetching Gemini response:", error);
         });
     }
-    
 
     chatbotinput.value = '';
     chatbotinputMob.value = '';
+}
+
+function extractDayFromMessage(message) {
+    const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    for (const day of daysOfWeek) {
+        if (message.includes(day)) {
+            return day;
+        }
+    }
+    return null;
+}
+
+function findWeatherForDay(ForecastData, dayOfWeek) {
+    const forecast = ForecastData.list.find(entry => {
+        const date = new Date(entry.dt_txt);
+        return date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() === dayOfWeek;
+    });
+
+    if (forecast) {
+        return {
+            condition: forecast.weather[0].description,
+            temperature: forecast.main.temp
+        };
+    } else {
+        return null;
+    }
 }
 
 
