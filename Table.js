@@ -14,8 +14,16 @@ let  chatbotResponseMob=document.getElementById('chatbotResponseMobile');
 
 const searchInput = document.querySelector('input[type="text"]');
 
-
-
+function showLoading()
+{
+    document.getElementById('loading-spinner').style.display = 'block';
+    document.getElementById('mainTable').style.display = 'none';
+}
+function hideLoading()
+{
+    document.getElementById('loading-spinner').style.display = 'none';
+    document.getElementById('mainTable').style.display = 'block';
+}
 async function FetchGeminiResponse(chatinput) {
 
 
@@ -81,6 +89,7 @@ function SearchByClick() {
 
 // Function to fetch current weather data
 function getWeatherData(city) {
+showLoading();
     const apiKey = 'f46cf96a3a72845e83afefb220c37c9a';
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
     
@@ -105,6 +114,8 @@ function getWeatherData(city) {
                 console.error('Error fetching weather data:', error);
                 showError('Unable to fetch weather data. Please try again later.');
             }
+        }).finally(() => {
+            hideLoading();
         });
 }
 
@@ -127,6 +138,8 @@ function getForecastData(lat, lon) {
         .catch(error => {
             console.error('Error fetching forecast data:', error);
             showError('Unable to fetch forecast data. Please try again later.');
+        }).finally(() => {
+            hideLoading();
         });
 }
 
