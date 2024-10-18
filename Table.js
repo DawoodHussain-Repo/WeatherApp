@@ -1,0 +1,348 @@
+let ForecastData; // To hold the forecast data
+let currentCity='Islamabad'; // To hold the current city name
+// Event handler for Enter key press in search input
+function SearchEvent(event) {
+    if (event.key === 'Enter') {
+        const city = searchInput.value.trim();
+        if (city) {
+            getWeatherData(city);
+        } else {
+            showError('Please enter a city name.');
+        }
+    }
+}
+
+// Function for handling button click
+function SearchByClick() {
+    const city = searchInput.value.trim();
+    if (city) {
+        currentCity=city;
+        getWeatherData(city);
+    } else {
+        showError('Please enter a city name.');
+    }
+}
+
+// Function to fetch current weather data
+function getWeatherData(city) {
+    const apiKey = 'f46cf96a3a72845e83afefb220c37c9a';
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+    
+    fetch(url)
+        .then(response => {
+            if (response.status === 404) {
+                throw new Error('City not found');
+            } else if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const cityName = data.name;
+            // Fetch forecast data for the next 5 days
+            getForecastData(data.coord.lat, data.coord.lon);
+        })
+        .catch(error => {
+            if (error.message === 'City not found') {
+                showError('City not found. Please check the city name.');
+            } else {
+                console.error('Error fetching weather data:', error);
+                showError('Unable to fetch weather data. Please try again later.');
+            }
+        });
+}
+
+let originalForecastData; 
+
+function getForecastData(lat, lon) {
+    const apiKey = 'f46cf96a3a72845e83afefb220c37c9a';
+    const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            ForecastData = data; 
+            originalForecastData = JSON.parse(JSON.stringify(data)); // Deep copy the original data
+            renderTable(1); // Render the first page of the table
+        })
+        .catch(error => {
+            console.error('Error fetching forecast data:', error);
+            showError('Unable to fetch forecast data. Please try again later.');
+        });
+}
+
+function getWeatherByLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+            const { latitude, longitude } = position.coords;
+            getForecastData(latitude, longitude);
+        }, () => {
+            alert('Unable to retrieve your location. Please enable location services.');
+        });
+    } else {
+        alert('Geolocation is not supported by this browser.');
+    }
+}
+
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('active');
+}
+
+// Pagination variables
+const rowsPerPage = 10;
+let currentPage = 1;
+
+// Function to render the table based on the current page
+function renderTable(page) {
+    const tableBody = document.getElementById('tableBody');
+    const pageInfo = document.getElementById('pageInfo');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    // Clear previous table data
+    tableBody.innerHTML = '';
+
+    // Check if ForecastData is available
+    if (!ForecastData || !ForecastData.list) {
+        return;
+    }
+
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const pageData = ForecastData.list.slice(start, end);
+
+    pageData.forEach(entry => {
+        const row = document.createElement('tr');
+        const date = new Date(entry.dt_txt);
+
+        row.innerHTML = `
+            <td class=" py-2 px-3 border-b border-gray-700 text-sm">${date.toLocaleDateString('en-US', { weekday: 'long' })}</td>
+            <td class=" py-2 px-3 border-b border-gray-700 text-sm">${date.toLocaleDateString()}</td>
+            <td class="Tempdata py-2 px-3 border-b border-gray-700 text-sm">${entry.main.temp_max.toFixed(2)} °C</td>
+            <td class="Tempdata py-2 px-3 border-b border-gray-700 text-sm">${entry.main.temp_min.toFixed(2)} °C</td>
+            <td class=" py-2 px-3 border-b border-gray-700 text-sm">${entry.weather[0].description}</td>
+        `;
+        tableBody.appendChild(row);
+    });
+
+    const totalPages = Math.ceil(ForecastData.list.length / rowsPerPage);
+    pageInfo.innerText = `Page ${page} of ${totalPages}`;
+    
+    prevBtn.disabled = page === 1;
+    nextBtn.disabled = page === totalPages;
+
+    prevBtn.onclick = () => changePage(page - 1);
+    nextBtn.onclick = () => changePage(page + 1);
+}
+function sortAsc() {
+    if (ForecastData && ForecastData.list) {
+        ForecastData.list.sort((a, b) => a.main.temp_max - b.main.temp_max);
+        renderTable(1);
+    }
+}
+
+// Sorting Forecast Data in Descending Order by Max Temperature
+function sortDesc() {
+    if (ForecastData && ForecastData.list) {
+        ForecastData.list.sort((a, b) => b.main.temp_max - a.main.temp_max);
+        renderTable(1);
+    }
+}
+// Filter out only rainy days
+function filterRain() {
+    if (ForecastData && ForecastData.list) {
+        const rainyDays = originalForecastData.list.filter(entry => entry.weather[0].description.toLowerCase().includes('rain'));
+        ForecastData.list = rainyDays;  // Update ForecastData with filtered data
+        renderTable(1); // Re-render the table with filtered data
+    }
+}
+
+// Function to toggle rain filter
+function toggleRainFilter() {
+    const filterRainBtn = document.getElementById('filterRainBtn');
+    
+    // Toggle the active class
+    filterRainBtn.classList.toggle('active');
+    
+    if (filterRainBtn.classList.contains('active')) {
+        filterRain(); // Apply the rain filter
+    } else {
+        ForecastData = JSON.parse(JSON.stringify(originalForecastData)); // Restore original data
+        renderTable(1); // Re-render the table with original data
+    }
+}
+
+// Find the day with the highest temperature
+function findMaxTemp() {
+    if (ForecastData && ForecastData.list) {
+        const maxTempEntry = ForecastData.list.reduce((max, entry) => entry.main.temp_max > max.main.temp_max ? entry : max);
+        alert(`Max Temperature: ${maxTempEntry.main.temp_max.toFixed(2)} °C on ${maxTempEntry.dt_txt}`);
+    }
+}
+// Function to change the page
+function changePage(page) {
+    currentPage = page;
+    renderTable(currentPage);
+}
+
+let isCelsius = true; // Keep track of the current unit (Celsius/Fahrenheit)
+
+function toggleUnit() {
+    const toggleButton = document.getElementById('toggleUnitBtn');
+    const tempElements = document.querySelectorAll('.Tempdata'); // Select all temperature elements
+
+    tempElements.forEach(tempElement => {
+        const currentTemp = parseFloat(tempElement.innerText); // Get current temperature
+
+        if (isCelsius) {
+            const fahrenheit = (currentTemp * 9 / 5) + 32; // Convert Celsius to Fahrenheit
+            tempElement.innerText = fahrenheit.toFixed(0) + '°F'; // Update each temperature to Fahrenheit
+        } else {
+            const celsius = (currentTemp - 32) * 5 / 9; // Convert Fahrenheit to Celsius
+            tempElement.innerText = celsius.toFixed(0) + '°C'; // Update each temperature to Celsius
+        }
+    });
+
+    // Toggle button text between Celsius and Fahrenheit
+    toggleButton.innerText = isCelsius ? '°F' : '°C';
+    isCelsius = !isCelsius; // Toggle the state
+}
+function openChatbot() {
+    document.getElementById('chatbotPopup').classList.remove('hidden');
+}
+
+function closeChatbot() {
+    document.getElementById('chatbotPopup').classList.add('hidden');
+}
+let chatbotinput=document.querySelector('#chatbotInput');
+let  chatbotResponse=document.getElementById('chatbotResponse');
+let chatbotinputMob=document.querySelector('#chatbotInputMobile');
+let  chatbotResponseMob=document.getElementById('chatbotResponseMobile');
+
+ function appendUserMessage(message) {
+    const userMessage = document.createElement('p');
+    userMessage.className = 'my-1 bg-blue-500 text-white rounded-2xl px-4 py-2 inline-block max-w-xs break-words shadow-md float-right clear-both';
+    userMessage.textContent = message;
+    chatbotResponse.appendChild(userMessage);
+    chatbotResponse.scrollTop = chatbotResponse.scrollHeight;
+}
+
+function appendChatbotMessage(message) {
+    const chatbotMessage = document.createElement('p');
+    chatbotMessage.className = 'my-1 bg-green-500 text-white rounded-2xl px-4 py-2 inline-block max-w-xs break-words shadow-md float-left clear-both';
+    chatbotMessage.textContent = message;
+    chatbotResponse.appendChild(chatbotMessage);
+    chatbotResponse.scrollTop = chatbotResponse.scrollHeight;
+
+}
+function appendUserMessageMob(message) {
+    const userMessage = document.createElement('p');
+    userMessage.className = 'my-1 bg-blue-500 text-white rounded-2xl px-4 py-2 inline-block max-w-xs break-words shadow-md float-right clear-both';
+    userMessage.textContent = message;
+    chatbotResponseMob.appendChild(userMessage);
+    chatbotResponseMob.scrollTop = chatbotResponse.scrollHeight;
+}
+
+function appendChatbotMessageMob(message) {
+    const chatbotMessage = document.createElement('p');
+    chatbotMessage.className = 'my-1 bg-green-500 text-white rounded-2xl px-4 py-2 inline-block max-w-xs break-words shadow-md float-left clear-both';
+    chatbotMessage.textContent = message;
+    chatbotResponseMob.appendChild(chatbotMessage);
+    chatbotResponseMob.scrollTop = chatbotResponse.scrollHeight;
+
+}
+
+function findMinTemperature(data) {
+    return Math.min(...data.list.map(entry => entry.main.temp_min));
+  }
+  
+  function findMaxTemperature(data) {
+    return Math.max(...data.list.map(entry => entry.main.temp_max));
+  }
+  
+  function calculateAverageTemperature(data) {
+    const totalTemp = data.list.reduce((sum, entry) => sum + entry.main.temp, 0);
+    return totalTemp / data.list.length;
+  }
+  
+  function findFirstWeatherCondition(data) {
+    return data.list[0].weather[0].main;
+  }
+
+  async function sendMessage() {
+let message;
+if(chatbotinputMob.value)
+    {
+        message=chatbotinputMob.value;
+
+    } else if(chatbotinput.value)
+    {
+
+        message=chatbotinput.value;
+
+    }else
+    {
+        return;
+    }
+    
+    appendUserMessage(message);
+    appendUserMessageMob(message);
+    message=message.toLowerCase();
+    // Respond to greetings and appreciation messages
+    if (message.includes('hi') || message.includes('hello') || message.includes('hey')) {
+        appendChatbotMessage('Hello! How can I assist you with the weather today?');
+    appendChatbotMessageMob('Hello! How can I assist you with the weather today?');
+    } 
+    else if (message.includes('bye') || message.includes('goodbye') || message.includes('see you')) {
+        appendChatbotMessage('Goodbye! Have a great day!');
+    appendChatbotMessageMob('Goodbye! Have a great day!');
+    } 
+    else if (message.includes('thank') || message.includes('thanks') || message.includes('appreciate')) {
+        appendChatbotMessage('You’re welcome! Happy to help!');
+        appendChatbotMessageMob('You’re welcome! Happy to help!');
+    }
+    // Weather-related queries
+    else if (message.includes('max temp') || message.includes('maximum temperature') || message.includes('hottest')) {
+        appendChatbotMessage(`The maximum temperature in ${currentCity} is ${findMaxTemperature(ForecastData)} °C.`);
+    appendChatbotMessageMob(`The maximum temperature in ${currentCity} is ${findMaxTemperature(ForecastData)} °C.`);
+    } 
+    else if (message.includes('min temp') || message.includes('minimum temperature') || message.includes('coldest')) {
+        appendChatbotMessage(`The minimum temperature in ${currentCity} is ${findMinTemperature(ForecastData)} °C.`);
+    appendChatbotMessageMob(`The minimum temperature in ${currentCity} is ${findMinTemperature(ForecastData)} °C.`);
+    } 
+    else if (message.includes('avg temp') || message.includes('average temperature') || message.includes('mean temp')) {
+        appendChatbotMessage(`The average temperature in ${currentCity} is ${calculateAverageTemperature(ForecastData)} °C.`);
+    appendChatbotMessageMob(`The average temperature in ${currentCity} is ${calculateAverageTemperature(ForecastData)} °C.`);
+    } 
+    else if (message.includes('current condition') || message.includes('weather condition') || message.includes('weather like')) {
+        appendChatbotMessage(`The current weather in ${currentCity} condition is: ${findFirstWeatherCondition(ForecastData)}.`);
+    appendChatbotMessageMob(`The current weather in ${currentCity} condition is: ${findFirstWeatherCondition(ForecastData)}.`);
+    } 
+    else {
+        appendChatbotMessage('Sorry, I can only provide weather information related to maximum, minimum, average temperatures, and current weather conditions.');
+    appendChatbotMessageMob('Sorry, I can only provide weather information related to maximum, minimum, average temperatures, and current weather conditions.');
+    }
+
+    // Clear the input field after sending the message
+    chatbotinput.value = '';
+    chatbotinputMob.value = '';
+}
+
+
+
+
+
+const searchInput = document.querySelector('input[type="text"]');
+searchInput.addEventListener('keypress', SearchEvent);
+document.querySelector("#searchBtn").addEventListener('click', SearchByClick);
+document.querySelector("#sendBtn").addEventListener('click', sendMessage);
+
+getWeatherData('Islamabad'); 
+
+
